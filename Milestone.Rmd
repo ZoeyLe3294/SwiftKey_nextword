@@ -27,7 +27,7 @@ library(stringr)
 library(knitr)
 library(kableExtra)
 library(ggplot2)
-#setwd("D:/test/Coursera/Capstone_final project")
+library(qdap)
 blogs = readLines("final/en_US/en_US.blogs.txt", skipNul = T, encoding="UTF-8")
 news = readLines("final/en_US/en_US.news.txt",skipNul = T, encoding="UTF-8")
 twitter = readLines("final/en_US/en_US.twitter.txt",skipNul = T, encoding="UTF-8")
@@ -59,7 +59,7 @@ kable(sum.tab) %>%
 Since the volume of the given database is really big, 1000 of lines will be used for the demonstration of Cleaning and Exploratory Analysis in this Milestone report. Below is the summary table of sample data. 
 
 ```{r sampletable}
-set.seed(324)
+set.seed(123)
 sample.size=1000
 
 sample.blog=sample(blogs,sample.size)
@@ -84,38 +84,50 @@ kable(sum.samtab) %>%
 
 For cleaning the text data for further text mining process, we will follow below steps:
 
-- Create Corpus: corpus is created to use in tm_map for text cleaning
 - Remove URLs and website addresses by change internet addresses into blank space
+- Remove words within brackets
+- Remove symbols encoded in latin1
+- Replace abbreviations and contractions with their base forms
 - Lowercase all words
-- Remove numbers
 - Remove stopwords by replace them into blank space
-- Remove profinity using bad-words.txt from http://www.bannedwordlist.com/lists/swearWords.txt
 - Remove punctuations
+- Remove numbers
+- Remove profinity using bad-words.txt from http://www.bannedwordlist.com/lists/swearWords.txt
 - Remove strip white space and create plain text documents
+- Create Corpus: corpus is created to use in tm_map for text cleaning
 
 ```{r cleaning}
 #####CLEANING
 
 sample=c(sample.blog,sample.new,sample.twitter)
 
-##lower case
-sample=tolower(sample)
-
 ##remove website link and twitter @
 sample=gsub("(f|ht)tp(s?)://(.*)[.][a-z]+", " ", sample)
 sample=gsub("@[^\\s]+"," ",sample)
 
+# Remove text within brackets
+sample=bracketX(sample)
+
 ##remove latin1 words
 latin.sym=grep("[^NOT_ASCII](NOT_ASCII){2}[^NOT_ASCII]",iconv(sample, "latin1", "ASCII", sub="NOT_ASCII"))
 sample[latin.sym]=stri_trans_general(sample[latin.sym], "latin-ascii")
-sample=str_replace_all(sample, "[[:punct:]]", "'")
 sample=gsub('[^\x20-\x7E]', "'", sample)
 
-##remove stopwords
+##replace abbreviate words with their full terms
+sample=replace_abbreviation(sample)
+
+##replace contractions with their base words
+sample=replace_contraction(sample)
+
+##lower case
+sample=tolower(sample)
+
+##remove stopwords and unwanted abbreviation
 sample=removeWords(sample,stopwords("en"))
+sample=gsub("'[A-z]+", " ", sample)
 
 ##remove punctuations
-sample=removePunctuation(sample)
+sample=gsub("[[:punct:]]", " ", sample)
 
 ##remove numbers
 sample=removeNumbers(sample)
@@ -127,9 +139,11 @@ sample=removeWords(sample,swear.words[,1])
 ##remove extra space
 sample=stripWhitespace(sample)
 
-##create corpus
 corpus = VCorpus(VectorSource(sample))
 corpus = tm_map(corpus, PlainTextDocument)
+
+rm(sample.twitter,sample.blog,sample.new)
+rm(blogs,news,twitter,swear.words,latin.sym)
 
 ```
 
@@ -266,8 +280,7 @@ makePlot(tri.freq[1:top,], "30 Most Common Trigrams")
 
 ```{r wordcloud3, fig.height=6,fig.width=6}
 
-
-  wordcloud(words = tri.freq$word, freq = tri.freq$freq, min.freq = 1,
+wordcloud(words = tri.freq$word, freq = tri.freq$freq, min.freq = 1,
             max.words=30, random.order=T, rot.per=0.35, random.color = T,scale=c(2,.1),
             colors=brewer.pal(8,name= "Set1"))
 
