@@ -1,4 +1,3 @@
-
 library(shiny)
 
 
@@ -16,15 +15,15 @@ shinyUI(fluidPage(
     mainPanel(
       tabsetPanel(type = "tabs",
                   tabPanel("Prediction",
-                           h3(textInput("inputString", "Enter here:")),
+                           h3(textAreaInput("inputString", "Enter here:",width = '300%',rows = 4)),
                            uiOutput('suggestions'),
                            br(),
                            h3("Note:"),
                            tags$span(style="color:darkred",
                                      tags$strong(textOutput("message")))),
                   tabPanel("Codebook", includeMarkdown("Codebook.Rmd")))
-    
+      
+    )
   )
-  )
-    
+  
 ))
