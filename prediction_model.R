@@ -1,18 +1,18 @@
-load("unigram.Rda")
-load("bigram.Rda")
-load("trigram.Rda")
-load("quadgram.Rda")
+load("unigram_nostop.Rda")
+load("bigram_nostop.Rda")
+load("trigram_nostop.Rda")
+load("quadgram_nostop.Rda")
 library(stringr)
 library(stringi)
 library(tm)
 library(NLP)
 wordproc <- function(sentence){
   found=c()
-  #sentence=" back house couple"
+  sentence = gsub("[[:blank:]]+$","",sentence)
   sentence <- removeNumbers(sentence)
   sentence <- removePunctuation(sentence)
   sentence <- tolower(sentence)
-  
+  sentence = stripWhitespace(sentence)
   ##Match last words to ngram data
   wordPred=function(nword,ngram){
     last.words=word(sentence,-nword,-1)
