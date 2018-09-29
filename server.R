@@ -1,5 +1,12 @@
-
 library(shiny)
+load("unigram.Rda")
+load("bigram.Rda")
+load("trigram.Rda")
+load("quadgram.Rda")
+library(stringr)
+library(stringi)
+library(tm)
+library(NLP)
 source("prediction_model.R")
 
 shinyServer(function(input, output,session) {
@@ -7,7 +14,7 @@ shinyServer(function(input, output,session) {
     wordproc(input$inputString)
   })
   
-  output$message = renderText(tail(prediction(),1))
+  output$message = renderText(prediction()[length(prediction())])
   
   #Reactive prediction
   
@@ -16,10 +23,11 @@ shinyServer(function(input, output,session) {
   #observe when input changes
   observeEvent(eventExpr = input$inputString,
                handlerExpr = {
-                 len = length(unique(prediction()[-length(prediction())]))
+                 len <- length(prediction()[-length(prediction())])
+                 value$buttons=list()
                  for (i in 1:len){
                    value$buttons[[i]] = actionButton(inputId = paste0("button",i),
-                                                     label = unique(prediction()[-length(prediction())])[i])
+                                                     label = prediction()[-length(prediction())][i])
                  }
                })
   #render buttons
@@ -32,8 +40,7 @@ shinyServer(function(input, output,session) {
       i = ii
       observeEvent(eventExpr = input[[paste0("button",i)]],
                    handlerExpr = {updateTextInput(session,'inputString',
-                                                  value=paste(input$inputString,unique(prediction()[-length(prediction())])[i]))})
+                                                  value=paste(input$inputString,prediction()[-length(prediction())][i]))})
     })
   }
 })
-
