@@ -1,4 +1,3 @@
-setwd("D:/test/Coursera/Capstone_final project/NextWord_Prediction")
 load("unigram.Rda")
 load("bigram.Rda")
 load("trigram.Rda")
@@ -9,6 +8,7 @@ library(tm)
 library(NLP)
 wordproc <- function(sentence){
   found=c()
+  #sentence=" back house couple"
   sentence <- removeNumbers(sentence)
   sentence <- removePunctuation(sentence)
   sentence <- tolower(sentence)
@@ -18,8 +18,10 @@ wordproc <- function(sentence){
     last.words=word(sentence,-nword,-1)
     foundlist = ngram[grep(paste("^",last.words," ",sep=""),ngram$word),]
     found=foundlist[word(foundlist$word,2,-1)!=last.words,]
-    if(nrow(found)!=0){
-      result=head(word(found$word,-1),4)
+    if(nrow(foundlist)!=0){
+      if(length(found$word)<4){
+        result=word(found$word,-1)
+      }else{result=head(word(found$word,-1),4)}
     }else{
       result=c()
     }
@@ -47,14 +49,3 @@ wordproc <- function(sentence){
   
   return(c(found,mess))
 }
-
-
-
-  
-  
-  
-  
-  
-  
-  
-  
